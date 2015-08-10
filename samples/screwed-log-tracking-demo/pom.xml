@@ -7,15 +7,30 @@
   <version>0.13.2</version>
   <packaging>pom</packaging>
 
+  <properties>
+    <docker.assembly.dockerFileDir>${project.basedir}</docker.assembly.dockerFileDir>
+  </properties>
+
   <build>
     <plugins>
       <plugin>
         <groupId>org.jolokia</groupId>
         <artifactId>docker-maven-plugin</artifactId>
         <version>${project.version}</version>
+
         <configuration>
           <images>
             <image>
+              <name>local/cnt</name>
+              <build>
+                <assembly>
+                  <descriptor>${project.basedir}/assembly.xml</descriptor>
+                </assembly>
+              </build>
+            </image>
+
+            <image>
+              <alias>counter 1</alias>
               <name>local/cnt</name>
               <run>
                 <cmd>-s 5</cmd>
@@ -30,6 +45,7 @@
             </image>
 
             <image>
+              <alias>counter 1</alias>
               <name>local/cnt</name>
               <run>
                 <wait>
