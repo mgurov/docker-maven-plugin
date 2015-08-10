@@ -1,0 +1,69 @@
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+  <modelVersion>4.0.0</modelVersion>
+
+  <groupId>org.jolokia.samples</groupId>
+  <artifactId>screwed-log-tracking-demo</artifactId>
+  <version>0.13.2</version>
+  <packaging>pom</packaging>
+
+  <build>
+    <plugins>
+      <plugin>
+        <groupId>org.jolokia</groupId>
+        <artifactId>docker-maven-plugin</artifactId>
+        <version>${project.version}</version>
+        <configuration>
+          <images>
+            <image>
+              <name>local/cnt</name>
+              <run>
+                <cmd>-s 5</cmd>
+                <wait>
+                  <log>Count: 5.</log>
+                  <time>20000</time>
+                </wait>
+                <log>
+                  <color>yellow</color> <prefix>one</prefix>
+                </log>
+              </run>
+            </image>
+
+            <image>
+              <name>local/cnt</name>
+              <run>
+                <wait>
+                  <log>Count: 5.</log>
+                  <time>60000</time>
+                </wait>
+                <log>
+                  <color>red</color> <prefix>two</prefix>
+                </log>
+              </run>
+            </image>
+          </images>
+        </configuration>
+
+        <executions>
+          <execution>
+            <id>start</id>
+            <phase>pre-integration-test</phase>
+            <goals>
+              <goal>build</goal>
+              <goal>start</goal>
+            </goals>
+          </execution>
+          <execution>
+            <id>stop</id>
+            <phase>post-integration-test</phase>
+            <goals>
+              <goal>stop</goal>
+            </goals>
+          </execution>
+        </executions>
+      </plugin>
+
+    </plugins>
+  </build>
+
+</project>
