@@ -1,5 +1,7 @@
 #!/bin/bash -eu
 
+# Simple script that counts every second;
+
 shutup=-1
 exit=-1
 cat=-1
