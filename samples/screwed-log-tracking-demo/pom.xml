@@ -23,7 +23,14 @@
             <image>
               <name>local/cnt</name>
               <build>
+                <from>debian:jessie</from>
+                <entryPoint>
+                  <exec>
+                    <arg>/counter.sh</arg>
+                  </exec>
+                </entryPoint>
                 <assembly>
+                  <basedir>/</basedir>
                   <descriptor>${project.basedir}/assembly.xml</descriptor>
                 </assembly>
               </build>
