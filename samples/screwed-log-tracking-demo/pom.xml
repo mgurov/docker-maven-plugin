@@ -46,7 +46,7 @@
                   <time>20000</time>
                 </wait>
                 <log>
-                  <color>yellow</color> <prefix>one</prefix>
+                  <color>yellow</color> <prefix>STOP_5</prefix>
                 </log>
               </run>
             </image>
@@ -56,11 +56,11 @@
               <name>local/cnt</name>
               <run>
                 <wait>
-                  <log>Count: 5.</log>
+                  <log>Count: 3.</log>
                   <time>60000</time>
                 </wait>
                 <log>
-                  <color>red</color> <prefix>two</prefix>
+                  <color>red</color> <prefix>STOP_3</prefix>
                 </log>
               </run>
             </image>
