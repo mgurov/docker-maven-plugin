@@ -1,6 +1,4 @@
 MVN_IMG = maven:3.3.3-jdk-8
-mvn_cache:
-	- docker run --name mvn_cache -v /root/.m2/repository $(MVN_IMG) /bin/true
 run: mvn_cache
 	docker run -it --rm \
 		--volumes-from mvn_cache \
@@ -9,3 +7,5 @@ run: mvn_cache
 		-w /usr/src/app \
 		$(MVN_IMG) \
 		mvn docker:start docker:stop
+mvn_cache:
+	- docker run --name mvn_cache -v /root/.m2/repository $(MVN_IMG) /bin/true
