@@ -6,7 +6,7 @@ run: mvn_cache
 		-v $(shell pwd):/usr/src/app \
 		-w /usr/src/app \
 		$(MVN_IMG) \
-		mvn docker:start docker:stop
+		mvn docker:start docker:stop $(o)
 mvn_cache:
 	- docker run --name mvn_cache -v /root/.m2/repository $(MVN_IMG) /bin/true
 run_boot2docker_https: mvn_cache
@@ -21,4 +21,4 @@ run_boot2docker_https: mvn_cache
 		-e DOCKER_CERT_PATH=/boot2docker/certs/boot2docker-vm \
 		-v $(DOCKER_CERT_PATH):/boot2docker/certs/boot2docker-vm \
 		$(MVN_IMG) \
-		mvn docker:start docker:stop
+		mvn docker:start docker:stop $(o)
