@@ -5,15 +5,15 @@ import java.util.List;
 
 public class Arguments {
 
-    /**
-     * @parameter
-     */
     private String shell;
 
-    /**
-     * @parameter
-     */
     private List<String> exec;
+
+    private List<String> execInlined = new ArrayList<>();
+
+    public void set(String shell) {
+        setShell(shell);
+    }
 
     public void setShell(String shell) {
         this.shell = shell;
@@ -27,16 +27,28 @@ public class Arguments {
         this.exec = exec;
     }
 
+    public void setArg(String arg) {
+        this.execInlined.add(arg);
+    }
+
     public List<String> getExec() {
-        return exec;
+        return exec == null ? execInlined : exec;
     }
 
     public void validate() throws IllegalArgumentException {
-        if (shell == null && (exec == null || exec.isEmpty())){
-            throw new IllegalArgumentException("Argument conflict, either shell or params should be specified");
+        int valueSources = 0;
+        if (shell != null) {
+            valueSources ++;
         }
-        if (shell != null && exec != null) {
-            throw new IllegalArgumentException("Argument conflict, either shell or params should be specified");
+        if (exec != null && !exec.isEmpty()) {
+            valueSources ++;
+        }
+        if (!execInlined.isEmpty()) {
+            valueSources ++;
+        }
+
+        if (valueSources != 1){
+            throw new IllegalArgumentException("Argument conflict: either shell or args should be specified and only in one form.");
         }
     }
 

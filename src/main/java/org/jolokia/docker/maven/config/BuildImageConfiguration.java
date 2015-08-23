@@ -276,7 +276,7 @@ public class BuildImageConfiguration {
             log.warn("https://github.com/rhuss/docker-maven-plugin/blob/master/doc/changelog.md");
             log.warn("");
             log.warn("For now, the command is automatically translated for you to the shell form:");
-            log.warn("   <cmd><shell>" + command + "</shell></cmd>");
+            log.warn("   <cmd>" + command + "</cmd>");
         }
 
     }
