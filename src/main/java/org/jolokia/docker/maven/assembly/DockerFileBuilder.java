@@ -240,13 +240,11 @@ public class DockerFileBuilder {
     }
 
     public DockerFileBuilder cmd(Arguments cmd) {
-        cmd.validate();
         this.cmd = cmd;
         return this;
     }
 
     public DockerFileBuilder entryPoint(Arguments entryPoint) {
-        entryPoint.validate();
         this.entryPoint = entryPoint;
         return this;
     }
