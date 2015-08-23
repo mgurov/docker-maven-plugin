@@ -130,6 +130,9 @@ public class ImageConfiguration implements StartOrderResolver.Resolvable {
         if (null != build) {
             build.validate(log);
         }
+        if (null != run) {
+            run.validate();
+        }
     }
 
     // =========================================================================

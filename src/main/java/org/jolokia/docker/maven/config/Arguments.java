@@ -1,7 +1,8 @@
 package org.jolokia.docker.maven.config;
 
-import java.util.ArrayList;
-import java.util.List;
+import org.jolokia.docker.maven.util.EnvUtil;
+
+import java.util.*;
 
 public class Arguments {
 
@@ -10,6 +11,14 @@ public class Arguments {
     private List<String> exec;
 
     private List<String> execInlined = new ArrayList<>();
+
+    public Arguments() {
+        this(null);
+    }
+
+    public Arguments(String shell) {
+        this.shell = shell;
+    }
 
     public void set(String shell) {
         setShell(shell);
@@ -50,6 +59,16 @@ public class Arguments {
         if (valueSources != 1){
             throw new IllegalArgumentException("Argument conflict: either shell or args should be specified and only in one form.");
         }
+    }
+
+    public List<String> asStrings() {
+        if (shell != null) {
+            return Arrays.asList(EnvUtil.splitOnSpaceWithEscape(shell));
+        }
+        if (exec != null) {
+            return Collections.unmodifiableList(exec);
+        }
+        return Collections.unmodifiableList(execInlined);
     }
 
     public static class Builder {
