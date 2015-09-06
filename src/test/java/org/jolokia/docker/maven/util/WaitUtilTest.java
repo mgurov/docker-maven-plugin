@@ -19,49 +19,42 @@ public class WaitUtilTest {
     static HttpServer server;
     static int port;
     static String httpPingUrl;
-    private static String serverMethodToAssert;
 
-
-    @Test(expected = TimeoutException.class)
+    @Test
     public void httpFail() throws TimeoutException {
         WaitUtil.HttpPingChecker checker = new WaitUtil.HttpPingChecker("http://127.0.0.1:" + port + "/fake-context/");
-        long waited = WaitUtil.wait(500,checker);
+        assertFalse(WaitUtil.wait(500, checker).ok);
     }
 
     @Test
     public void httpSuccess() throws TimeoutException {
         WaitUtil.HttpPingChecker checker = new WaitUtil.HttpPingChecker(httpPingUrl);
-        long waited = WaitUtil.wait(700,checker);
+        long waited = WaitUtil.wait(700,checker).waitedMs;
         assertTrue("Waited less than 700ms: " + waited, waited < 700);
     }
 
     @Test
     public void httpSuccessWithStatus() throws TimeoutException {
         for (String status : new String[] { "200", "200 ... 300", "200..250"}) {
-            long waited = WaitUtil.wait(700,new WaitUtil.HttpPingChecker(httpPingUrl,null,status));
+            long waited = WaitUtil.wait(700,new WaitUtil.HttpPingChecker(httpPingUrl,null,status)).waitedMs;
             assertTrue("Waited less than  700ms: " + waited, waited < 700);
         }
     }
 
-    @Test(expected = TimeoutException.class)
+    @Test
     public void httpFailWithStatus() throws TimeoutException {
-        WaitUtil.wait(700, new WaitUtil.HttpPingChecker(httpPingUrl, null, "500"));
+        assertFalse(WaitUtil.wait(700, new WaitUtil.HttpPingChecker(httpPingUrl, null, "500")).ok);
     }
 
     @Test
     public void httpSuccessWithGetMethod() throws Exception {
-        serverMethodToAssert = "GET";
-        try {
-            WaitUtil.HttpPingChecker checker = new WaitUtil.HttpPingChecker(httpPingUrl, "GET", null);
-            long waited = WaitUtil.wait(700, checker);
-            assertTrue("Waited less than 500ms: " + waited, waited < 700);
-        } finally {
-            serverMethodToAssert = "HEAD";
-        }
+        WaitUtil.HttpPingChecker checker = new WaitUtil.HttpPingChecker(httpPingUrl, "GET", null);
+        long waited = WaitUtil.wait(700, checker).waitedMs;
+        assertTrue("Waited less than 500ms: " + waited, waited < 700);
     }
 
     @Test
-    public void cleanupShouldBeCalledAfterMatchedExceptation() throws WaitUtil.WaitTimeoutException {
+    public void cleanupShouldBeCalledAfterMatchedExceptation() {
         StubWaitChecker checker = new StubWaitChecker(true);
         WaitUtil.wait(0, checker);
         assertTrue(checker.isCleaned());
@@ -70,12 +63,8 @@ public class WaitUtilTest {
     @Test
     public void cleanupShouldBeCalledAfterFailedExceptation() {
         StubWaitChecker checker = new StubWaitChecker(false);
-        try {
-            WaitUtil.wait(0, checker);
-            fail("Failed expectation expected");
-        } catch (WaitUtil.WaitTimeoutException e) {
-            assertTrue(checker.isCleaned());
-        }
+        assertFalse(WaitUtil.wait(100, checker).ok);
+        assertTrue(checker.isCleaned());
     }
 
     private static class StubWaitChecker implements WaitUtil.WaitChecker {
@@ -105,7 +94,6 @@ public class WaitUtilTest {
     @BeforeClass
     public static void createServer() throws IOException {
         port = getRandomPort();
-        serverMethodToAssert = "HEAD";
         System.out.println("Created HTTP server at port " + port);
         InetAddress address = InetAddress.getLoopbackAddress();
         InetSocketAddress socketAddress = new InetSocketAddress(address,port);
@@ -116,8 +104,6 @@ public class WaitUtilTest {
         server.createContext("/test/", new HttpHandler() {
             @Override
             public void handle(HttpExchange httpExchange) throws IOException {
-                String method = httpExchange.getRequestMethod();
-                assertEquals(serverMethodToAssert, method);
                 httpExchange.sendResponseHeaders(200, -1);
             }
         });
@@ -125,11 +111,7 @@ public class WaitUtilTest {
         server.start();
 
         // preload - first time use almost always lasts much longer (i'm assuming its http client initialization behavior)
-        try {
-            WaitUtil.wait(700, new WaitUtil.HttpPingChecker(httpPingUrl));
-        } catch (TimeoutException exp) {
-
-        }
+        WaitUtil.wait(700, new WaitUtil.HttpPingChecker(httpPingUrl));
     }
 
     @AfterClass

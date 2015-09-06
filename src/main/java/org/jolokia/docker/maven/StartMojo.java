@@ -10,9 +10,9 @@ package org.jolokia.docker.maven;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Properties;
-import java.util.concurrent.TimeoutException;
 import java.util.regex.Pattern;
 
+import com.google.common.base.Joiner;
 import org.apache.commons.lang3.text.StrSubstitutor;
 import org.apache.maven.plugin.MojoExecutionException;
 import org.codehaus.plexus.util.StringUtils;
@@ -30,6 +30,7 @@ import org.jolokia.docker.maven.service.QueryService;
 import org.jolokia.docker.maven.service.RunService;
 import org.jolokia.docker.maven.util.StartOrderResolver;
 import org.jolokia.docker.maven.util.Timestamp;
+import org.jolokia.docker.maven.util.WaitResult;
 import org.jolokia.docker.maven.util.WaitUtil;
 
 
@@ -151,16 +152,19 @@ public class StartMojo extends AbstractDockerMojo {
             return;
         }
 
-        try {
-            long waited = WaitUtil.wait(wait.getTime(), checkers);
-            log.info(imageConfig.getDescription() + ": Waited " + StringUtils.join(logOut.toArray(), " and ") + " " + waited + " ms");
-        } catch (WaitUtil.WaitTimeoutException exp) {
-            String desc = imageConfig.getDescription() + ": Timeout after " + exp.getWaited() + " ms while waiting " +
-                          StringUtils.join(logOut.toArray(), " and ");
+        final WaitResult waitResult = WaitUtil.wait(wait.getTime(), checkers);
+        final String waitedFor = AND_JOINER.join(logOut);
+        if (waitResult.ok) {
+            log.info(imageConfig.getDescription() + ": Waited " + waitedFor + " " + waitResult.waitedMs + " ms");
+        } else {
+            String desc = imageConfig.getDescription() + ": Timeout after " + waitedFor + " ms while waiting " +
+                    StringUtils.join(logOut.toArray(), " and ");
             log.error(desc);
             throw new MojoExecutionException(desc);
         }
     }
+
+    public static final Joiner AND_JOINER = Joiner.on(" and ");
 
     private WaitUtil.WaitChecker getLogWaitChecker(final String logPattern, final DockerAccess docker, final String containerId) {
         return new WaitUtil.WaitChecker() {

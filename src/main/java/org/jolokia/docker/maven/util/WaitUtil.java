@@ -37,24 +37,24 @@ public class WaitUtil {
 
     private WaitUtil() {}
 
-    public static long wait(int maxWait, WaitChecker ... checkers) throws WaitTimeoutException {
+    public static WaitResult wait(int maxWait, WaitChecker... checkers) {
         return wait(maxWait, Arrays.asList(checkers));
     }
 
-    public static long wait(int maxWait, Iterable<WaitChecker> checkers) throws WaitTimeoutException {
+    public static WaitResult wait(int maxWait, Iterable<WaitChecker> checkers) {
         long max = maxWait > 0 ? maxWait : DEFAULT_MAX_WAIT;
         long now = System.currentTimeMillis();
         try {
             do {
                 for (WaitChecker checker : checkers) {
                     if (checker.check()) {
-                        return delta(now);
+                        return new WaitResult(true, delta(now));
                     }
                 }
                 sleep(WAIT_RETRY_WAIT);
             } while (delta(now) < max);
 
-            throw new WaitTimeoutException("No checker finished successfully", delta(now));
+            return new WaitResult(false, delta(now));
 
         } finally {
             cleanup(checkers);
@@ -174,18 +174,5 @@ public class WaitUtil {
     public interface WaitChecker {
         boolean check();
         void cleanUp();
-    }
-
-    public static class WaitTimeoutException extends TimeoutException {
-        private final long waited;
-
-        public WaitTimeoutException(String message, long waited) {
-            super(message);
-            this.waited = waited;
-        }
-
-        public long getWaited() {
-            return waited;
-        }
     }
 }
