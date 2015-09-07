@@ -13,9 +13,10 @@ import java.util.Properties;
 import java.util.regex.Pattern;
 
 import com.google.common.base.Joiner;
+import com.google.common.base.Predicate;
+import com.google.common.base.Predicates;
 import org.apache.commons.lang3.text.StrSubstitutor;
 import org.apache.maven.plugin.MojoExecutionException;
-import org.codehaus.plexus.util.StringUtils;
 import org.jolokia.docker.maven.access.DockerAccess;
 import org.jolokia.docker.maven.access.DockerAccessException;
 import org.jolokia.docker.maven.access.PortMapping;
@@ -138,8 +139,8 @@ public class StartMojo extends AbstractDockerMojo {
             }
             logOut.add("on url " + waitUrl);
         }
-        if (wait.getLog() != null) {
-            checkers.add(getLogWaitChecker(wait.getLog(), docker, containerId));
+        if (wait.getLog() != null || wait.getFail() != null) {
+            checkers.add(getLogWaitChecker(wait.getLog(), wait.getFail(), docker, containerId));
             logOut.add("on log out '" + wait.getLog() + "'");
         }
 
@@ -174,22 +175,26 @@ public class StartMojo extends AbstractDockerMojo {
 
     public static final Joiner AND_JOINER = Joiner.on(" and ");
 
-    private WaitUtil.WaitChecker getLogWaitChecker(final String logPattern, final DockerAccess docker, final String containerId) {
+    private WaitUtil.WaitChecker getLogWaitChecker(final String logPattern, final String fail, final DockerAccess docker, final String containerId) {
         return new WaitUtil.WaitChecker() {
 
-            boolean first = true;
-            LogGetHandle logHandle;
-            boolean detected = false;
+            private LogGetHandle logHandle;
+            private volatile WaitUtil.WaitStatus detected = WaitUtil.WaitStatus.unknown;
 
             @Override
             public WaitUtil.WaitStatus check() {
-                if (first) {
-                    final Pattern pattern = Pattern.compile(logPattern);
+                if (null == logHandle) {
+                    final Predicate<CharSequence> ok = null == logPattern ? Predicates.<CharSequence>alwaysFalse() : Predicates.containsPattern(logPattern);
+                    final Predicate<CharSequence> ko = null == fail ? Predicates.<CharSequence>alwaysFalse() : Predicates.containsPattern(fail);
                     logHandle = docker.getLogAsync(containerId, new LogCallback() {
                         @Override
                         public void log(int type, Timestamp timestamp, String txt) throws LogCallback.DoneException {
-                            if (pattern.matcher(txt).find()) {
-                                detected = true;
+                            if (ok.apply(txt)) {
+                                detected = WaitUtil.WaitStatus.positive;
+                                throw new LogCallback.DoneException();
+                            }
+                            if (ko.apply(txt)) {
+                                detected = WaitUtil.WaitStatus.negative;
                                 throw new LogCallback.DoneException();
                             }
                         }
@@ -199,9 +204,8 @@ public class StartMojo extends AbstractDockerMojo {
                             log.error(error);
                         }
                     });
-                    first = false;
                 }
-                return detected ? WaitUtil.WaitStatus.positive : WaitUtil.WaitStatus.unknown;
+                return detected;
             }
 
             @Override

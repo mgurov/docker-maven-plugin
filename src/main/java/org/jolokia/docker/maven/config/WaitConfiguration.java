@@ -31,6 +31,7 @@ public class WaitConfiguration {
      * @parameter
      */
     private int shutdown;
+    private String fail;
 
     public WaitConfiguration() {}
 
@@ -60,6 +61,10 @@ public class WaitConfiguration {
 
     public int getShutdown() {
         return shutdown;
+    }
+
+    public String getFail() {
+        return fail;
     }
 
     // =============================================================================
