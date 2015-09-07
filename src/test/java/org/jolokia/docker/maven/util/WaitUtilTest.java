@@ -23,7 +23,7 @@ public class WaitUtilTest {
     @Test
     public void httpFail() throws TimeoutException {
         WaitUtil.HttpPingChecker checker = new WaitUtil.HttpPingChecker("http://127.0.0.1:" + port + "/fake-context/");
-        assertFalse(WaitUtil.wait(500, checker).ok);
+        assertFalse(WaitUtil.wait(500, checker).isOk());
     }
 
     @Test
@@ -43,7 +43,7 @@ public class WaitUtilTest {
 
     @Test
     public void httpFailWithStatus() throws TimeoutException {
-        assertFalse(WaitUtil.wait(700, new WaitUtil.HttpPingChecker(httpPingUrl, null, "500")).ok);
+        assertFalse(WaitUtil.wait(700, new WaitUtil.HttpPingChecker(httpPingUrl, null, "500")).isOk());
     }
 
     @Test
@@ -63,7 +63,7 @@ public class WaitUtilTest {
     @Test
     public void cleanupShouldBeCalledAfterFailedExceptation() {
         StubWaitChecker checker = new StubWaitChecker(WaitUtil.WaitStatus.unknown);
-        assertFalse(WaitUtil.wait(100, checker).ok);
+        assertFalse(WaitUtil.wait(100, checker).isOk());
         assertTrue(checker.isCleaned());
     }
 

@@ -154,14 +154,22 @@ public class StartMojo extends AbstractDockerMojo {
 
         final WaitResult waitResult = WaitUtil.wait(wait.getTime(), checkers);
         final String waitedFor = AND_JOINER.join(logOut);
-        if (waitResult.ok) {
-            log.info(imageConfig.getDescription() + ": Waited " + waitedFor + " " + waitResult.waitedMs + " ms");
-        } else {
-            String desc = imageConfig.getDescription() + ": Timeout after " + waitedFor + " ms while waiting " +
-                    StringUtils.join(logOut.toArray(), " and ");
-            log.error(desc);
-            throw new MojoExecutionException(desc);
+        switch (waitResult.result) {
+            case positive:
+                log.info(imageConfig.getDescription() + ": Waited " + waitedFor + " " + waitResult.waitedMs + " ms");
+                return;
+            case negative:
+                logAndThrow(imageConfig.getDescription() + ": Expectations failed after " + waitResult.waitedMs + " ms while waiting " + waitedFor);
+                break;
+            case unknown:
+                logAndThrow(imageConfig.getDescription() + ": Timeout after " + waitResult.waitedMs + " ms while waiting " + waitedFor);
+                break;
         }
+    }
+
+    private void logAndThrow(String errorMessage) throws MojoExecutionException {
+        log.error(errorMessage);
+        throw new MojoExecutionException(errorMessage);
     }
 
     public static final Joiner AND_JOINER = Joiner.on(" and ");

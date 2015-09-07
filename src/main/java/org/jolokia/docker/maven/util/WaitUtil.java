@@ -48,13 +48,13 @@ public class WaitUtil {
                 for (WaitChecker checker : checkers) {
                     WaitStatus waitStatus = checker.check();
                     if (waitStatus != WaitStatus.unknown) {
-                        return new WaitResult(waitStatus == WaitStatus.positive, delta(now));
+                        return new WaitResult(waitStatus, delta(now));
                     }
                 }
                 sleep(WAIT_RETRY_WAIT);
             } while (delta(now) < max);
 
-            return new WaitResult(false, delta(now));
+            return new WaitResult(WaitStatus.unknown, delta(now));
 
         } finally {
             cleanup(checkers);
