@@ -174,7 +174,7 @@ public class StartMojo extends AbstractDockerMojo {
             boolean detected = false;
 
             @Override
-            public boolean check() {
+            public WaitUtil.WaitStatus check() {
                 if (first) {
                     final Pattern pattern = Pattern.compile(logPattern);
                     logHandle = docker.getLogAsync(containerId, new LogCallback() {
@@ -193,7 +193,7 @@ public class StartMojo extends AbstractDockerMojo {
                     });
                     first = false;
                 }
-                return detected;
+                return detected ? WaitUtil.WaitStatus.positive : WaitUtil.WaitStatus.unknown;
             }
 
             @Override

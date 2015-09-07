@@ -55,29 +55,29 @@ public class WaitUtilTest {
 
     @Test
     public void cleanupShouldBeCalledAfterMatchedExceptation() {
-        StubWaitChecker checker = new StubWaitChecker(true);
+        StubWaitChecker checker = new StubWaitChecker(WaitUtil.WaitStatus.positive);
         WaitUtil.wait(0, checker);
         assertTrue(checker.isCleaned());
     }
 
     @Test
     public void cleanupShouldBeCalledAfterFailedExceptation() {
-        StubWaitChecker checker = new StubWaitChecker(false);
+        StubWaitChecker checker = new StubWaitChecker(WaitUtil.WaitStatus.unknown);
         assertFalse(WaitUtil.wait(100, checker).ok);
         assertTrue(checker.isCleaned());
     }
 
     private static class StubWaitChecker implements WaitUtil.WaitChecker {
 
-        private final boolean checkResult;
+        private final WaitUtil.WaitStatus checkResult;
         private boolean cleaned = false;
 
-        public StubWaitChecker(boolean checkResult) {
+        public StubWaitChecker(WaitUtil.WaitStatus checkResult) {
             this.checkResult = checkResult;
         }
 
         @Override
-        public boolean check() {
+        public WaitUtil.WaitStatus check() {
             return checkResult;
         }
 

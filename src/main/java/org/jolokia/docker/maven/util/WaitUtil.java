@@ -2,7 +2,6 @@ package org.jolokia.docker.maven.util;
 
 import java.io.IOException;
 import java.util.Arrays;
-import java.util.concurrent.TimeoutException;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -47,8 +46,9 @@ public class WaitUtil {
         try {
             do {
                 for (WaitChecker checker : checkers) {
-                    if (checker.check()) {
-                        return new WaitResult(true, delta(now));
+                    WaitStatus waitStatus = checker.check();
+                    if (waitStatus != WaitStatus.unknown) {
+                        return new WaitResult(waitStatus == WaitStatus.positive, delta(now));
                     }
                 }
                 sleep(WAIT_RETRY_WAIT);
@@ -131,15 +131,15 @@ public class WaitUtil {
         }
 
         @Override
-        public boolean check() {
+        public WaitStatus check() {
             try {
                 return ping();
             } catch (IOException exception) {
-                return false;
+                return WaitStatus.unknown;
             }
         }
 
-        private boolean ping() throws IOException {
+        private WaitStatus ping() throws IOException {
             RequestConfig requestConfig =
                     RequestConfig.custom()
                                  .setSocketTimeout(HTTP_PING_TIMEOUT)
@@ -156,7 +156,7 @@ public class WaitUtil {
                     if (responseCode == 501) {
                         throw new IllegalArgumentException("Invalid or not supported HTTP method '" + method.toUpperCase() + "' for checking " + url);
                     }
-                    return (responseCode >= statusMin && responseCode <= statusMax);
+                    return (responseCode >= statusMin && responseCode <= statusMax) ? WaitStatus.positive : WaitStatus.unknown;
                 } finally {
                     response.close();
                 }
@@ -172,7 +172,11 @@ public class WaitUtil {
     // ====================================================================================================
 
     public interface WaitChecker {
-        boolean check();
+        WaitStatus check();
         void cleanUp();
+    }
+
+    public enum WaitStatus {
+        positive, negative, unknown
     }
 }
