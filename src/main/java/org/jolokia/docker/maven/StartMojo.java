@@ -140,6 +140,7 @@ public class StartMojo extends AbstractDockerMojo {
             logOut.add("on url " + waitUrl);
         }
         if (wait.getLog() != null || wait.getFail() != null) {
+            //TODO: proper toString with fail
             checkers.add(getLogWaitChecker(wait.getLog(), wait.getFail(), docker, containerId));
             logOut.add("on log out '" + wait.getLog() + "'");
         }
@@ -163,6 +164,7 @@ public class StartMojo extends AbstractDockerMojo {
                 logAndThrow(imageConfig.getDescription() + ": Expectations failed after " + waitResult.waitedMs + " ms while waiting " + waitedFor);
                 break;
             case unknown:
+                //TODO: fail on not met y/n
                 logAndThrow(imageConfig.getDescription() + ": Timeout after " + waitResult.waitedMs + " ms while waiting " + waitedFor);
                 break;
         }
