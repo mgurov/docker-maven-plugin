@@ -31,15 +31,19 @@ public class WaitConfiguration {
      * @parameter
      */
     private int shutdown;
+
+    /**
+     * @parameter
+     */
     private String fail;
 
     public WaitConfiguration() {}
 
-    private WaitConfiguration(int time, HttpConfiguration http, String log, int shutdown) {
-        this.time = time;
-        this.http = http;
-        this.log = log;
-        this.shutdown = shutdown;
+    private WaitConfiguration(Builder builder) {
+        this.time = builder.time;
+        this.http = new HttpConfiguration(builder.url, builder.method, builder.status);
+        this.log = builder.log;
+        this.shutdown = builder.shutdown;
     }
 
 
@@ -105,7 +109,7 @@ public class WaitConfiguration {
         }
 
         public WaitConfiguration build() {
-            return new WaitConfiguration(time,new HttpConfiguration(url,method,status), log,shutdown);
+            return new WaitConfiguration(this);
         }
     }
 
@@ -125,6 +129,7 @@ public class WaitConfiguration {
         private HttpConfiguration(String url, String method, String status) {
             this.url = url;
             this.method = method;
+            this.status = status;
         }
 
         public String getUrl() {
