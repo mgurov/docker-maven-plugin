@@ -86,6 +86,11 @@ public class WaitUtilTest {
             cleaned = true;
         }
 
+        @Override
+        public boolean isRequired() {
+            return true; //TODO: test with false
+        }
+
         public boolean isCleaned() {
             return cleaned;
         }

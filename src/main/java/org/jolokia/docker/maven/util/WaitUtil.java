@@ -54,7 +54,12 @@ public class WaitUtil {
                 sleep(WAIT_RETRY_WAIT);
             } while (delta(now) < max);
 
-            return new WaitResult(WaitStatus.unknown, delta(now));
+            for (WaitChecker checker : checkers) {
+                if (checker.isRequired()) {
+                    return new WaitResult(WaitStatus.unknown, delta(now));
+                }
+            }
+            return new WaitResult(WaitStatus.positive, delta(now));
 
         } finally {
             cleanup(checkers);
@@ -167,6 +172,11 @@ public class WaitUtil {
 
         @Override
         public void cleanUp() { }
+
+        @Override
+        public boolean isRequired() {
+            return true;
+        }
     }
 
     // ====================================================================================================
@@ -174,6 +184,7 @@ public class WaitUtil {
     public interface WaitChecker {
         WaitStatus check();
         void cleanUp();
+        boolean isRequired();
     }
 
     public enum WaitStatus {

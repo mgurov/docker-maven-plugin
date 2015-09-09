@@ -216,6 +216,11 @@ public class StartMojo extends AbstractDockerMojo {
                     logHandle.finish();
                 }
             }
+
+            @Override
+            public boolean isRequired() {
+                return logPattern != null;
+            }
         };
     }
 
