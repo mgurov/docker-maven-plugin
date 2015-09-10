@@ -177,6 +177,11 @@ public class WaitUtil {
         public boolean isRequired() {
             return true;
         }
+
+        @Override
+        public String toString() {
+            return "on url " + url;
+        }
     }
 
     // ====================================================================================================

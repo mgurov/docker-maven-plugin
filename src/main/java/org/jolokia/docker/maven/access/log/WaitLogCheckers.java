@@ -7,9 +7,16 @@ import org.jolokia.docker.maven.util.Logger;
 import org.jolokia.docker.maven.util.Timestamp;
 import org.jolokia.docker.maven.util.WaitUtil;
 
+import java.util.Collection;
+import java.util.Collections;
+
 public class WaitLogCheckers {
-    public static WaitUtil.WaitChecker getLogWaitChecker(final String logPattern, final String fail, final String containerId, final DockerAccess docker, final Logger log) {
-        return new WaitUtil.WaitChecker() {
+    public static Collection<WaitUtil.WaitChecker> getLogWaitChecker(final String logPattern,
+                                                                     final String fail,
+                                                                     final String containerId,
+                                                                     final DockerAccess docker,
+                                                                     final Logger log) {
+        return Collections.<WaitUtil.WaitChecker>singleton(new WaitUtil.WaitChecker() {
 
             private LogGetHandle logHandle;
             private volatile WaitUtil.WaitStatus detected = WaitUtil.WaitStatus.unknown;
@@ -52,6 +59,11 @@ public class WaitLogCheckers {
             public boolean isRequired() {
                 return logPattern != null;
             }
-        };
+
+            @Override
+            public String toString() {
+                return "on log out '" + logPattern + "'";
+            }
+        });
     }
 }

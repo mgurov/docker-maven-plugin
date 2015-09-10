@@ -123,7 +123,6 @@ public class StartMojo extends AbstractDockerMojo {
         }
 
         ArrayList<WaitUtil.WaitChecker> checkers = new ArrayList<>();
-        ArrayList<String> logOut = new ArrayList<>();
         if (wait.getUrl() != null) {
             String waitUrl = StrSubstitutor.replace(wait.getUrl(), projectProperties);
             WaitConfiguration.HttpConfiguration httpConfig = wait.getHttp();
@@ -132,12 +131,10 @@ public class StartMojo extends AbstractDockerMojo {
             } else {
                 checkers.add(new WaitUtil.HttpPingChecker(waitUrl));
             }
-            logOut.add("on url " + waitUrl);
         }
         if (wait.getLog() != null || wait.getFail() != null) {
             //TODO: proper toString with fail
-            checkers.add(WaitLogCheckers.getLogWaitChecker(wait.getLog(), wait.getFail(), containerId, docker, log));
-            logOut.add("on log out '" + wait.getLog() + "'");
+            checkers.addAll(WaitLogCheckers.getLogWaitChecker(wait.getLog(), wait.getFail(), containerId, docker, log));
         }
 
         if (checkers.isEmpty()) {
@@ -150,7 +147,7 @@ public class StartMojo extends AbstractDockerMojo {
         }
 
         final WaitResult waitResult = WaitUtil.wait(wait.getTime(), checkers);
-        final String waitedFor = AND_JOINER.join(logOut);
+        final String waitedFor = AND_JOINER.join(checkers);
         switch (waitResult.result) {
             case positive:
                 log.info(imageConfig.getDescription() + ": Waited " + waitedFor + " " + waitResult.waitedMs + " ms");
