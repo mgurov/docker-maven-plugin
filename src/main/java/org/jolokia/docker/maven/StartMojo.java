@@ -10,18 +10,14 @@ package org.jolokia.docker.maven;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Properties;
-import java.util.regex.Pattern;
 
 import com.google.common.base.Joiner;
-import com.google.common.base.Predicate;
-import com.google.common.base.Predicates;
 import org.apache.commons.lang3.text.StrSubstitutor;
 import org.apache.maven.plugin.MojoExecutionException;
 import org.jolokia.docker.maven.access.DockerAccess;
 import org.jolokia.docker.maven.access.DockerAccessException;
 import org.jolokia.docker.maven.access.PortMapping;
-import org.jolokia.docker.maven.access.log.LogCallback;
-import org.jolokia.docker.maven.access.log.LogGetHandle;
+import org.jolokia.docker.maven.access.log.WaitLogCheckers;
 import org.jolokia.docker.maven.config.ImageConfiguration;
 import org.jolokia.docker.maven.config.LogConfiguration;
 import org.jolokia.docker.maven.config.RunImageConfiguration;
@@ -30,7 +26,6 @@ import org.jolokia.docker.maven.log.LogDispatcher;
 import org.jolokia.docker.maven.service.QueryService;
 import org.jolokia.docker.maven.service.RunService;
 import org.jolokia.docker.maven.util.StartOrderResolver;
-import org.jolokia.docker.maven.util.Timestamp;
 import org.jolokia.docker.maven.util.WaitResult;
 import org.jolokia.docker.maven.util.WaitUtil;
 
@@ -141,7 +136,7 @@ public class StartMojo extends AbstractDockerMojo {
         }
         if (wait.getLog() != null || wait.getFail() != null) {
             //TODO: proper toString with fail
-            checkers.add(getLogWaitChecker(wait.getLog(), wait.getFail(), docker, containerId));
+            checkers.add(WaitLogCheckers.getLogWaitChecker(wait.getLog(), wait.getFail(), containerId, docker, log));
             logOut.add("on log out '" + wait.getLog() + "'");
         }
 
@@ -176,53 +171,6 @@ public class StartMojo extends AbstractDockerMojo {
     }
 
     public static final Joiner AND_JOINER = Joiner.on(" and ");
-
-    private WaitUtil.WaitChecker getLogWaitChecker(final String logPattern, final String fail, final DockerAccess docker, final String containerId) {
-        return new WaitUtil.WaitChecker() {
-
-            private LogGetHandle logHandle;
-            private volatile WaitUtil.WaitStatus detected = WaitUtil.WaitStatus.unknown;
-
-            @Override
-            public WaitUtil.WaitStatus check() {
-                if (null == logHandle) {
-                    final Predicate<CharSequence> ok = null == logPattern ? Predicates.<CharSequence>alwaysFalse() : Predicates.containsPattern(logPattern);
-                    final Predicate<CharSequence> ko = null == fail ? Predicates.<CharSequence>alwaysFalse() : Predicates.containsPattern(fail);
-                    logHandle = docker.getLogAsync(containerId, new LogCallback() {
-                        @Override
-                        public void log(int type, Timestamp timestamp, String txt) throws LogCallback.DoneException {
-                            if (ok.apply(txt)) {
-                                detected = WaitUtil.WaitStatus.positive;
-                                throw new LogCallback.DoneException();
-                            }
-                            if (ko.apply(txt)) {
-                                detected = WaitUtil.WaitStatus.negative;
-                                throw new LogCallback.DoneException();
-                            }
-                        }
-
-                        @Override
-                        public void error(String error) {
-                            log.error(error);
-                        }
-                    });
-                }
-                return detected;
-            }
-
-            @Override
-            public void cleanUp() {
-                if (logHandle != null) {
-                    logHandle.finish();
-                }
-            }
-
-            @Override
-            public boolean isRequired() {
-                return logPattern != null;
-            }
-        };
-    }
 
     protected boolean showLogs(ImageConfiguration imageConfig) {
         if (showLogs != null) {
