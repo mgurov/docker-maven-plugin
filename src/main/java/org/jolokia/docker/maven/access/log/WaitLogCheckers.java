@@ -23,11 +23,11 @@ public class WaitLogCheckers {
         final List<RegexpWaitLogChecker> checkers = new ArrayList<>();
 
         if (null != logPattern) {
-            checkers.add(new RegexpWaitLogChecker(Pattern.compile(logPattern), log, WaitLogCheckerType.ok));
+            checkers.add(new RegexpWaitLogChecker(Pattern.compile(logPattern), WaitLogCheckerType.ok));
         }
 
         if (null != fail) {
-            checkers.add(new RegexpWaitLogChecker(Pattern.compile(fail), log, WaitLogCheckerType.fail));
+            checkers.add(new RegexpWaitLogChecker(Pattern.compile(fail), WaitLogCheckerType.fail));
         }
 
         if (checkers.isEmpty()) {
@@ -41,7 +41,7 @@ public class WaitLogCheckers {
                     @Override
                     public void log(int type, Timestamp timestamp, String txt) throws DoneException {
                         for (RegexpWaitLogChecker checker : checkers) {
-                            checker.log(type, timestamp, txt);
+                            checker.onLogLine(txt);
                         }
                     }
 
@@ -79,11 +79,9 @@ public class WaitLogCheckers {
         public abstract WaitUtil.WaitStatus toStatus();
     }
 
-    private static class RegexpWaitLogChecker implements WaitUtil.WaitChecker, LogCallback {
+    private static class RegexpWaitLogChecker implements WaitUtil.WaitChecker {
 
         private final Pattern pattern;
-
-        private final Logger log;
 
         private final WaitLogCheckerType whenDetected;
 
@@ -93,23 +91,16 @@ public class WaitLogCheckers {
 
         private boolean tracing = false;
 
-        public RegexpWaitLogChecker(Pattern pattern, Logger log, WaitLogCheckerType whenDetected) {
+        public RegexpWaitLogChecker(Pattern pattern, WaitLogCheckerType whenDetected) {
             this.pattern = pattern;
-            this.log = log;
             this.whenDetected = whenDetected;
         }
 
-        @Override
-        public void log(int type, Timestamp timestamp, String txt) throws DoneException {
+        public void onLogLine(String txt) throws LogCallback.DoneException {
             if (pattern.matcher(txt).find()) {
                 detected = whenDetected.toStatus();
-                throw new DoneException();
+                throw new LogCallback.DoneException();
             }
-        }
-
-        @Override
-        public void error(String error) {
-            log.error(error);
         }
 
         @Override
