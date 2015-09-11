@@ -126,5 +126,10 @@ public class WaitLogCheckers {
         public void setLogHandleSupplier(Supplier<LogGetHandle> logHandleSupplier) {
             this.logHandleSupplier = logHandleSupplier;
         }
+
+        @Override
+        public String toString() {
+            return String.format("%s on log '%s'", whenDetected, pattern);
+        }
     }
 }
