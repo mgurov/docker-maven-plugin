@@ -132,10 +132,9 @@ public class StartMojo extends AbstractDockerMojo {
                 checkers.add(new WaitUtil.HttpPingChecker(waitUrl));
             }
         }
-        if (wait.getLog() != null || wait.getFail() != null) {
-            //TODO: proper toString with fail
-            checkers.addAll(WaitLogCheckers.getLogWaitChecker(wait.getLog(), wait.getFail(), containerId, docker, log));
-        }
+
+        checkers.addAll(WaitLogCheckers.makeLogWaitCheckers(wait.getLog(), wait.getFail(), containerId, docker, log));
+
 
         if (checkers.isEmpty()) {
             if (wait.getTime() > 0) {

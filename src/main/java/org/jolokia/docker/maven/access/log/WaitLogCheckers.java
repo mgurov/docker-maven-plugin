@@ -14,11 +14,12 @@ import java.util.List;
 import java.util.regex.Pattern;
 
 public class WaitLogCheckers {
-    public static Collection<? extends WaitUtil.WaitChecker> getLogWaitChecker(final String logPattern,
-                                                                               final String fail,
-                                                                               final String containerId,
-                                                                               final DockerAccess docker,
-                                                                               final Logger log) {
+
+    public static Collection<? extends WaitUtil.WaitChecker> makeLogWaitCheckers(final String logPattern,
+                                                                                 final String fail,
+                                                                                 final String containerId,
+                                                                                 final DockerAccess docker,
+                                                                                 final Logger log) {
 
         final List<RegexpWaitLogChecker> checkers = new ArrayList<>();
 
